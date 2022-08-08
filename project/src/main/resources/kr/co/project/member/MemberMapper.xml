@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.project.member.MemberMapper">
+	
+	<insert id="insert" parameterType="kr.co.project.member.MemberVO">
+		INSERT INTO member (
+			 email, pwd, name, gender, birthday, hp, zipcode, addr1, addr2, regdate
+		) VALUES (
+			#{email}, md5(#{pwd}), #{name}, #{gender}, #{birthday}, #{hp}, #{zipcode}, #{addr1}, #{addr2}, now() 
+		)
+	</insert>
+	
+	<!-- 이메일 중복 체크 22.07.25 -->
+	<select id="emailDupCheck" parameterType="String" resultType="int">
+		SELECT COUNT(*) FROM member WHERE email= #{email}
+	</select>
+
+	<!-- 로그인체크 22.07.25 -->
+	<select id="loginCheck" parameterType="kr.co.project.member.MemberVO" resultType="kr.co.project.member.MemberVO">
+		SELECT * FROM member WHERE email = #{email} AND pwd = md5(#{pwd}) <!-- pwd는 암호화니까 md5() -->
+	</select>
+	
+	<!-- 이메일 찾기 22.08.01 -->
+	<select id="findEmail" parameterType="kr.co.project.member.MemberVO" resultType="kr.co.project.member.MemberVO">
+		SELECT * FROM member WHERE name = #{name} AND hp = #{hp} 
+	</select>
+	
+	<!-- 비밀번호 찾기 22.08.01 -->
+	<select id="findPwd" parameterType="kr.co.project.member.MemberVO" resultType="kr.co.project.member.MemberVO">
+		SELECT * FROM member WHERE name = #{name} AND hp = #{hp} AND email = #{email}
+	</select>
+	
+	<!-- 임시비밀번호 업데이트 22.08.01 -->
+	<update id="updateTempPwd" parameterType="kr.co.project.member.MemberVO">
+		UPDATE member SET pwd = md5(#{pwd}) WHERE name = #{name} AND hp = #{hp} AND email = #{email}
+	</update>
+</mapper>

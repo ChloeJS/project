@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.project.board.BoardMapper">
+	
+	<!-- 등록 -->
+	<insert id="insert" parameterType="kr.co.project.board.BoardVO">
+		INSERT INTO board (
+			 title, content, regdate, viewcount, member_no, filename_org, filename_real
+		) VALUES (
+			 #{title}, #{content}, now(), #{viewcount}, #{member_no}, #{filename_org}, #{filename_real})
+	</insert>
+	<!-- no가 없는 이유는, mysql에서 auto increment로 1씩 증가하도록 해놨기 때문에!! -->
+	<!-- regdate는 mysql의 now()함수를 활용하므로  // now(), current_date(), sysdate(), curdate() 등등-->
+
+	
+
+
+
+
+	<!-- 전체 카운트 (전체 게시물 개수 확인 등)-->
+	<select id="count" parameterType="kr.co.project.board.BoardVO" resultType="java.lang.Integer"> <!-- alias 주는 것? -->
+		SELECT COUNT(*) FROM board
+		<where> <!-- 동적으로 -->
+			<if test="stype != null and stype != ''"><!-- searchType이 null이 아니고 빈값이 아니라면 -->
+				<if test="stype != 'all'">
+					${stype} LIKE '%${sword}%'
+				</if>
+				<if test="stype == 'all'">
+					title LIKE '%${sword}%' or content LIKE '%${sword}%'
+				</if>
+			</if>
+		</where>
+	</select>
+	
+	
+	<!-- 목록 조회 -->
+	<select id="list" parameterType="kr.co.project.board.BoardVO" resultType="kr.co.project.board.BoardVO">
+		SELECT *,
+			(SELECT name FROM member WHERE no = board.member_no) AS member_name,
+			(SELECT COUNT(*) FROM comment WHERE board_no = board.no AND tablename='board') AS comment_count
+		 FROM board 
+		<where> <!-- 동적 sql -->
+			<if test="stype != null and stype != ''"><!-- searchType이 null이 아니고 빈값이 아니라면 -->
+				<if test="stype != 'all'">
+					${stype} LIKE '%${sword}%'
+				</if>
+				<if test="stype == 'all'">
+					title LIKE '%${sword}%' or content LIKE '%${sword}%'
+				</if>
+			</if>
+		</where>
+		ORDER BY regdate DESC
+		LIMIT ${startIdx}, ${pageRow} <!-- 왜??? -->
+	</select>
+	
+	
+	<!-- 조회하기 -->
+	<select id="view" parameterType="int" resultType="kr.co.project.board.BoardVO">
+		SELECT * FROM board WHERE no = #{abcd} <!-- #{no} 꼭 no일 필요 없다. (정수 하나만 넘어오는 경우) -->
+	</select>
+	
+	
+	<!-- 조회수 1 증가 -->
+	<update id="updateViewcount" parameterType="int">
+		UPDATE board SET viewcount = viewcount + 1 WHERE no = #{no}
+	</update>
+	
+	
+	<!-- 수정하기 -->
+	<update id="update" parameterType="kr.co.project.board.BoardVO">
+		UPDATE board SET
+			title = #{title}
+			, content = #{content}
+			<if test="filename_org != null"> <!-- 파일이름_org이 null이 아니면 / set을 안했다는 것 -->
+			, filename_org = #{filename_org}
+			, filename_real = #{filename_real}
+			</if>
+		WHERE no = #{no}
+	</update>
+	
+	<delete id="delete" parameterType="int"> <!-- 파라미터타입이 꼭 int가아닐 수도 있다. -->
+		DELETE FROM board WHERE no = #{no}
+	</delete>
+	
+	
+	
+</mapper>

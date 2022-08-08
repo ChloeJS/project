@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xsi:schemaLocation="http://www.springframework.org/schema/mvc https://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+        http://www.springframework.org/schema/beans https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd">
+        
+         <!-- DispatcherServlet Context: defines this servlet's request-processing infrastructure -->
+    
+    <!-- Enables the Spring MVC @Controller programming model -->
+    
+    
+    
+    <mvc:annotation-driven /> 
+    <!-- 어노테이션을 넣어준 애들을 모두 bean객체로 생성(?) -->
+    <!-- 이 태그는 Spring MVC가 @Controller에 요청을 보내기 위해 필요한 HandlerMapping과 HandlerAdapter를 bean으로 등록한다.-->
+    
+    
+    
+    <!-- default servlet -->
+    <mvc:default-servlet-handler/>
+    
+    
+    
+    <!-- Handles HTTP GET requests for /resources/** by efficiently serving up static resources in the ${webappRoot}/resources directory -->
+    <mvc:resources mapping="/resources/**" location="/resources/" />
+    <!-- Resolves views selected for rendering by @Controllers to .jsp resources in the /WEB-INF/views directory -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/" />
+        <property name="suffix" value=".jsp" />
+    </bean>
+    
+    <context:component-scan base-package="kr.co.project" />
+    
+    <bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+    <!-- 
+        <property name="driverClassName" value="oracle.jdbc.driver.OracleDriver"/>
+        <property name="jdbcUrl" value="jdbc:mysql://localhost:3306/project"/>
+    -->
+        <property name="driverClassName" value="net.sf.log4jdbc.sql.jdbcapi.DriverSpy"/>
+        <property name="jdbcUrl" value="jdbc:log4jdbc:mysql://localhost:3306/project"/>  <!--포트 스키마명-->
+        
+        <property name="username" value="testuser"/>
+        <property name="password" value="test1234"/>
+    </bean>
+    
+    <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+        <constructor-arg ref="hikariConfig"/>
+    </bean>
+    
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+    
+    
+    <mybatis-spring:scan base-package="kr.co.project" 
+    	annotation="org.apache.ibatis.annotations.Mapper"/> 
+    	<!-- 어노테이션으로 Mapper가 적힌 것만 스캔될 수 있도록 -->
+    
+    
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value ="utf-8"></property>
+		<!-- 1024 * 1024 * 2bytes 2mb -->
+		<property name="maxUploadSize" value="104857560"></property>
+		<!-- 1024 * 1024 * 10bytes 10mb -->
+		<property name="maxUploadSizePerFile" value="2097152"></property>
+		<property name="uploadTempDir" value="file:/D:/kdigital/upload/temp"></property>
+		<property name="maxInMemorySize" value="10485756"></property>
+	</bean>
+	
+	<!-- 22.07.26 추가 -->
+    <mvc:interceptors>
+    	<mvc:interceptor>
+    	<!-- 모든 페이지에서 로그인체크가 필요하므로
+    		<mvc:mapping path="/board/write.do"/>
+    		<mvc:mapping path="/board/insert.do"/>
+    		<mvc:mapping path="/board/edit.do"/>
+    		<mvc:mapping path="/board/update.do"/>
+    		<mvc:mapping path="/board/delete.do"/>
+    	-->
+    		<mvc:mapping path="/board/**/"/>
+    		<mvc:mapping path="/board/index.do"/>
+    		<mvc:mapping path="/board/view.do"/>
+    		
+    		<bean class="interceptor.MemberLoginInterceptor"/>
+    	</mvc:interceptor>
+    </mvc:interceptors>
+    
+    
+    
+</beans>

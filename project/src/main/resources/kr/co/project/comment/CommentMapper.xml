@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="kr.co.project.comment.CommentMapper">
+	
+	<!-- 등록 -->
+	<insert id="insert" parameterType="kr.co.project.comment.CommentVO">
+		INSERT INTO comment (
+			 content, member_no, board_no, regdate, tablename
+		) VALUES (
+			 #{content}, #{member_no}, #{board_no}, Now(), #{tablename} )
+	</insert>
+
+	<!-- 전체 카운트 (전체 게시물 개수 확인 등)-->
+	<select id="count" parameterType="kr.co.project.comment.CommentVO" resultType="java.lang.Integer"> <!-- alias 주는 것? -->
+		SELECT COUNT(*) FROM comment
+		WHERE board_no = #{board_no} AND tablename = #{tablename}
+		
+	</select>
+	
+	
+	<!-- 목록 조회 -->
+	<select id="list" parameterType="kr.co.project.comment.CommentVO" resultType="kr.co.project.comment.CommentVO">
+		SELECT *,
+			(SELECT name FROM member WHERE no = comment.member_no ) AS member_name
+			FROM comment
+		WHERE board_no = #{board_no} AND tablename = #{tablename} <!-- 어떤 게시판의, 어떤 게시물 -->
+		ORDER BY regdate DESC
+		LIMIT ${startIdx}, ${pageRow} 
+	</select>
+	
+	
+	
+	<delete id="delete" parameterType="int"> <!-- 파라미터타입이 꼭 int가아닐 수도 있다. -->
+		DELETE FROM comment WHERE no = #{no} <!-- 어떤 게시물 -->
+	</delete>
+	
+	
+	
+</mapper>
